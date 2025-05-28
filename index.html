@@ -1,179 +1,166 @@
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Lời nhắn trái tim 3D tương tác</title>
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        overflow: hidden;
-        background: black;
-        font-family: "Segoe UI", sans-serif;
-        perspective: 1000px;
-        user-select: none; /* tránh chọn chữ khi kéo chuột */
+<head>
+  <meta charset="UTF-8" />
+  <title>Lời nhắn trái tim 3D tương tác</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      overflow: hidden;
+      background: black;
+      font-family: 'Segoe UI', sans-serif;
+      perspective: 1000px;
+      user-select: none; /* tránh chọn chữ khi kéo chuột */
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      -moz-user-select: none;
+      -webkit-touch-callout: none; /* iOS Safari */
+    }
+    #container3D {
+      width: 100vw;
+      height: 100vh;
+      transform-style: preserve-3d;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease-out;
+      cursor: grab;
+      touch-action: none; /* NGĂN TRÌNH DUYỆT KÉO CUỘN TRANG */
+    }
+    #container3D:active {
+      cursor: grabbing;
+    }
+    .floating-text {
+      position: absolute;
+      color: white;
+      font-size: 1.5rem;
+      white-space: nowrap;
+      pointer-events: none;
+      animation: floatDown linear forwards;
+      text-shadow: 0 0 8px rgba(255,255,255,0.8);
+      font-weight: 600;
+    }
+    @keyframes floatDown {
+      0% {
+        transform: translateY(-50px);
+        opacity: 1;
       }
-      #container3D {
-        width: 100vw;
-        height: 100vh;
-        transform-style: preserve-3d;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.1s ease-out;
-        cursor: grab;
+      100% {
+        transform: translateY(100vh);
+        opacity: 0;
       }
-      #container3D:active {
-        cursor: grabbing;
+    }
+    .heart {
+      color: red;
+      font-size: 1.8rem;
+      position: absolute;
+      animation: floatDown linear forwards;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="container3D"></div>
+
+  <script>
+    const messages = [
+      'Anh yêu em nhiều lắm ♡',
+      'Cảm ơn vì em đã đến',
+      'Làm người yêu anh nhé ♡',
+      'Anh sẽ luôn bên cạnh em',
+      'Mãi yêu anh nhé ♡',
+      'Nơi nào có em, nơi đó là thiên đường'
+    ];
+
+    const container = document.getElementById('container3D');
+
+    function createText() {
+      const msg = document.createElement('div');
+      msg.className = 'floating-text';
+      msg.textContent = messages[Math.floor(Math.random() * messages.length)];
+      msg.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+      msg.style.animationDuration = (3 + Math.random() * 2) + 's';
+      container.appendChild(msg);
+      setTimeout(() => msg.remove(), 7000);
+    }
+
+    function createHeart() {
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.innerHTML = '❤';
+      heart.style.left = Math.random() * (window.innerWidth - 30) + 'px';
+      heart.style.animationDuration = (3 + Math.random() * 2) + 's';
+      container.appendChild(heart);
+      setTimeout(() => heart.remove(), 6000);
+    }
+
+    // Tạo nhiều hơn chữ và trái tim
+    setInterval(createText, 500);
+    setInterval(createHeart, 400);
+
+    let isDragging = false;
+    let lastX, lastY;
+    let rotationX = 0;
+    let rotationY = 0;
+
+    function startDrag(x, y) {
+      isDragging = true;
+      lastX = x;
+      lastY = y;
+      container.style.transition = 'none';
+    }
+
+    function dragTo(x, y) {
+      if (!isDragging) return;
+
+      const deltaX = x - lastX;
+      const deltaY = y - lastY;
+
+      rotationY += deltaX * 0.3;
+      rotationX -= deltaY * 0.3;
+
+      rotationX = Math.min(90, Math.max(-90, rotationX));
+
+      container.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+
+      lastX = x;
+      lastY = y;
+    }
+
+    function endDrag() {
+      if (isDragging) {
+        isDragging = false;
+        container.style.transition = 'transform 0.3s ease-out';
       }
-      .floating-text {
-        position: absolute;
-        color: white;
-        font-size: 1.5rem;
-        white-space: nowrap;
-        pointer-events: none;
-        animation: floatDown linear forwards;
-        text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-        font-weight: 600;
+    }
+
+    // Mouse events
+    container.addEventListener('mousedown', e => {
+      startDrag(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('mousemove', e => {
+      dragTo(e.clientX, e.clientY);
+    });
+
+    // Touch events
+    container.addEventListener('touchstart', e => {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        startDrag(touch.clientX, touch.clientY);
       }
-      @keyframes floatDown {
-        0% {
-          transform: translateY(-50px);
-          opacity: 1;
-        }
-        100% {
-          transform: translateY(100vh);
-          opacity: 0;
-        }
+    }, { passive: false });
+
+    window.addEventListener('touchend', e => {
+      endDrag();
+    }, { passive: false });
+
+    window.addEventListener('touchmove', e => {
+      if (e.touches.length === 1) {
+        e.preventDefault(); // NGĂN CUỘN TRANG KHI KÉO
+        const touch = e.touches[0];
+        dragTo(touch.clientX, touch.clientY);
       }
-      .heart {
-        color: red;
-        font-size: 1.8rem;
-        position: absolute;
-        animation: floatDown linear forwards;
-        pointer-events: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="container3D"></div>
-
-       <script>
-      const messages = [
-        "Anh yêu em nhiều lắm ♡",
-        "Cảm ơn vì em đã đến",
-        "Làm người yêu anh nhé ♡",
-        "Anh sẽ luôn bên cạnh em",
-        "Mãi yêu anh nhé ♡",
-        "Nơi nào có em, nơi đó là thiên đường",
-      ];
-
-      const container = document.getElementById("container3D");
-
-      function createText() {
-        const msg = document.createElement("div");
-        msg.className = "floating-text";
-        msg.textContent = messages[Math.floor(Math.random() * messages.length)];
-        msg.style.left = Math.random() * (window.innerWidth - 200) + "px";
-        msg.style.animationDuration = 3 + Math.random() * 2 + "s";
-        container.appendChild(msg);
-        setTimeout(() => msg.remove(), 7000);
-      }
-
-      function createHeart() {
-        const heart = document.createElement("div");
-        heart.className = "heart";
-        heart.innerHTML = "❤";
-        heart.style.left = Math.random() * (window.innerWidth - 30) + "px";
-        heart.style.animationDuration = 3 + Math.random() * 2 + "s";
-        container.appendChild(heart);
-        setTimeout(() => heart.remove(), 6000);
-      }
-
-      // Tạo nhiều hơn chữ và trái tim
-      setInterval(createText, 500);
-      setInterval(createHeart, 400);
-
-      // Biến trạng thái xoay
-      let isDragging = false;
-      let lastX, lastY;
-      let rotationX = 0;
-      let rotationY = 0;
-
-      // --- Hàm xử lý bắt đầu kéo (chuột hoặc touch) ---
-      function startDrag(x, y) {
-        isDragging = true;
-        lastX = x;
-        lastY = y;
-        container.style.transition = "none";
-      }
-
-      // --- Hàm xử lý kéo (chuột hoặc touch) ---
-      function dragTo(x, y) {
-        if (!isDragging) return;
-
-        const deltaX = x - lastX;
-        const deltaY = y - lastY;
-
-        rotationY += deltaX * 0.3;
-        rotationX -= deltaY * 0.3;
-
-        rotationX = Math.min(90, Math.max(-90, rotationX));
-
-        container.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
-
-        lastX = x;
-        lastY = y;
-      }
-
-      // --- Kết thúc kéo ---
-      function endDrag() {
-        if (isDragging) {
-          isDragging = false;
-          container.style.transition = "transform 0.3s ease-out";
-        }
-      }
-
-      // Event chuột
-      container.addEventListener("mousedown", (e) => {
-        startDrag(e.clientX, e.clientY);
-      });
-      window.addEventListener("mouseup", endDrag);
-      window.addEventListener("mousemove", (e) => {
-        dragTo(e.clientX, e.clientY);
-      });
-
-      // Event cảm ứng điện thoại
-      container.addEventListener(
-        "touchstart",
-        (e) => {
-          if (e.touches.length === 1) {
-            const touch = e.touches[0];
-            startDrag(touch.clientX, touch.clientY);
-          }
-        },
-        { passive: true }
-      );
-
-      window.addEventListener(
-        "touchend",
-        (e) => {
-          endDrag();
-        },
-        { passive: true }
-      );
-
-      window.addEventListener(
-        "touchmove",
-        (e) => {
-          if (e.touches.length === 1) {
-            const touch = e.touches[0];
-            dragTo(touch.clientX, touch.clientY);
-          }
-        },
-        { passive: true }
-      );
-    </script>
-  </body>
+    }, { passive: false });
+  </script>
+</body>
 </html>
