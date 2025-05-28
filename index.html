@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Lời nhắn trái tim 3D tương tác</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: black;
+        font-family: "Segoe UI", sans-serif;
+        perspective: 1000px;
+        user-select: none; /* tránh chọn chữ khi kéo chuột */
+      }
+      #container3D {
+        width: 100vw;
+        height: 100vh;
+        transform-style: preserve-3d;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.1s ease-out;
+        cursor: grab;
+      }
+      #container3D:active {
+        cursor: grabbing;
+      }
+      .floating-text {
+        position: absolute;
+        color: white;
+        font-size: 1.5rem;
+        white-space: nowrap;
+        pointer-events: none;
+        animation: floatDown linear forwards;
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+        font-weight: 600;
+      }
+      @keyframes floatDown {
+        0% {
+          transform: translateY(-50px);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh);
+          opacity: 0;
+        }
+      }
+      .heart {
+        color: red;
+        font-size: 1.8rem;
+        position: absolute;
+        animation: floatDown linear forwards;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container3D"></div>
+
+    <script>
+      const messages = [
+        "Anh yêu em nhiều lắm ♡",
+        "Cảm ơn vì em đã đến",
+        "Làm người yêu anh nhé ♡",
+        "Anh sẽ luôn bên cạnh em",
+        "Mãi yêu anh nhé ♡",
+        "Nơi nào có em, nơi đó là thiên đường",
+      ];
+
+      const container = document.getElementById("container3D");
+
+      function createText() {
+        const msg = document.createElement("div");
+        msg.className = "floating-text";
+        msg.textContent = messages[Math.floor(Math.random() * messages.length)];
+        msg.style.left = Math.random() * (window.innerWidth - 200) + "px";
+        msg.style.animationDuration = 3 + Math.random() * 2 + "s";
+        container.appendChild(msg);
+        setTimeout(() => msg.remove(), 7000);
+      }
+
+      function createHeart() {
+        const heart = document.createElement("div");
+        heart.className = "heart";
+        heart.innerHTML = "❤";
+        heart.style.left = Math.random() * (window.innerWidth - 30) + "px";
+        heart.style.animationDuration = 3 + Math.random() * 2 + "s";
+        container.appendChild(heart);
+        setTimeout(() => heart.remove(), 6000);
+      }
+
+      // Tạo nhiều hơn chữ và trái tim
+      setInterval(createText, 500);
+      setInterval(createHeart, 400);
+
+      // Biến để lưu trạng thái xoay
+      let isDragging = false;
+      let lastX, lastY;
+      let rotationX = 0; // góc xoay theo trục X (ngang)
+      let rotationY = 0; // góc xoay theo trục Y (dọc)
+
+      container.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        container.style.transition = "none"; // bỏ chuyển tiếp để xoay mượt ngay
+      });
+
+      window.addEventListener("mouseup", () => {
+        if (isDragging) {
+          isDragging = false;
+          container.style.transition = "transform 0.3s ease-out"; // chuyển tiếp nhẹ khi thả
+        }
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+
+        const deltaX = e.clientX - lastX;
+        const deltaY = e.clientY - lastY;
+
+        // Cập nhật góc xoay, nhân với hệ số để xoay vừa phải
+        rotationY += deltaX * 0.3; // xoay theo ngang
+        rotationX -= deltaY * 0.3; // xoay theo dọc, trừ để đúng chiều
+
+        // Giới hạn góc xoay dọc để không lật ngược (ví dụ trong khoảng -90 đến 90 độ)
+        rotationX = Math.min(90, Math.max(-90, rotationX));
+
+        container.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+
+        lastX = e.clientX;
+        lastY = e.clientY;
+      });
+    </script>
+  </body>
+</html>
