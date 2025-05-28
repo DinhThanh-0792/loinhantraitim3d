@@ -59,7 +59,7 @@
   <body>
     <div id="container3D"></div>
 
-    <script>
+       <script>
       const messages = [
         "Anh yêu em nhiều lắm ♡",
         "Cảm ơn vì em đã đến",
@@ -95,44 +95,85 @@
       setInterval(createText, 500);
       setInterval(createHeart, 400);
 
-      // Biến để lưu trạng thái xoay
+      // Biến trạng thái xoay
       let isDragging = false;
       let lastX, lastY;
-      let rotationX = 0; // góc xoay theo trục X (ngang)
-      let rotationY = 0; // góc xoay theo trục Y (dọc)
+      let rotationX = 0;
+      let rotationY = 0;
 
-      container.addEventListener("mousedown", (e) => {
+      // --- Hàm xử lý bắt đầu kéo (chuột hoặc touch) ---
+      function startDrag(x, y) {
         isDragging = true;
-        lastX = e.clientX;
-        lastY = e.clientY;
-        container.style.transition = "none"; // bỏ chuyển tiếp để xoay mượt ngay
-      });
+        lastX = x;
+        lastY = y;
+        container.style.transition = "none";
+      }
 
-      window.addEventListener("mouseup", () => {
-        if (isDragging) {
-          isDragging = false;
-          container.style.transition = "transform 0.3s ease-out"; // chuyển tiếp nhẹ khi thả
-        }
-      });
-
-      window.addEventListener("mousemove", (e) => {
+      // --- Hàm xử lý kéo (chuột hoặc touch) ---
+      function dragTo(x, y) {
         if (!isDragging) return;
 
-        const deltaX = e.clientX - lastX;
-        const deltaY = e.clientY - lastY;
+        const deltaX = x - lastX;
+        const deltaY = y - lastY;
 
-        // Cập nhật góc xoay, nhân với hệ số để xoay vừa phải
-        rotationY += deltaX * 0.3; // xoay theo ngang
-        rotationX -= deltaY * 0.3; // xoay theo dọc, trừ để đúng chiều
+        rotationY += deltaX * 0.3;
+        rotationX -= deltaY * 0.3;
 
-        // Giới hạn góc xoay dọc để không lật ngược (ví dụ trong khoảng -90 đến 90 độ)
         rotationX = Math.min(90, Math.max(-90, rotationX));
 
         container.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
 
-        lastX = e.clientX;
-        lastY = e.clientY;
+        lastX = x;
+        lastY = y;
+      }
+
+      // --- Kết thúc kéo ---
+      function endDrag() {
+        if (isDragging) {
+          isDragging = false;
+          container.style.transition = "transform 0.3s ease-out";
+        }
+      }
+
+      // Event chuột
+      container.addEventListener("mousedown", (e) => {
+        startDrag(e.clientX, e.clientY);
       });
+      window.addEventListener("mouseup", endDrag);
+      window.addEventListener("mousemove", (e) => {
+        dragTo(e.clientX, e.clientY);
+      });
+
+      // Event cảm ứng điện thoại
+      container.addEventListener(
+        "touchstart",
+        (e) => {
+          if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            startDrag(touch.clientX, touch.clientY);
+          }
+        },
+        { passive: true }
+      );
+
+      window.addEventListener(
+        "touchend",
+        (e) => {
+          endDrag();
+        },
+        { passive: true }
+      );
+
+      window.addEventListener(
+        "touchmove",
+        (e) => {
+          if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            dragTo(touch.clientX, touch.clientY);
+          }
+        },
+        { passive: true }
+      );
     </script>
   </body>
 </html>
